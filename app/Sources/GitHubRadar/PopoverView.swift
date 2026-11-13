@@ -471,8 +471,9 @@ private struct CardRow: View {
 
     var body: some View {
         let hidden = store.isHidden(pr)
+        let stateIcons = (store.isDismissed(pr) ? 1 : 0) + (hidden ? 1 : 0)
         CardView(pr: pr, layout: store.layout, settings: store.settings, highlighted: hovered,
-                 hideFirstLineTrailing: hovered)
+                 hideFirstLineTrailing: hovered, firstLineReserve: stateIcons == 0 ? 0 : CGFloat(stateIcons) * 22 + 4)
             .opacity(hidden && !hovered ? 0.45 : 1)
             .overlay(alignment: .topTrailing) {
                 let dismissed = store.isDismissed(pr)

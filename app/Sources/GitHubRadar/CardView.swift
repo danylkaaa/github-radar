@@ -26,6 +26,8 @@ struct CardView: View {
     var highlighted = false
     /// Hides the right side of the first line, where the dropdown shows its hover buttons.
     var hideFirstLineTrailing = false
+    /// Room at the right of the first line for the dropdown's state icons (dismissed, hidden).
+    var firstLineReserve: CGFloat = 0
     var now = Date()
 
     var body: some View {
@@ -57,10 +59,15 @@ struct CardView: View {
                 }
                 .font(.system(size: 12))
                 .foregroundStyle(highlighted ? Color.white : Color.primary.opacity(0.8))
-                .padding(.trailing, index == 0 && hideFirstLineTrailing && right.isEmpty ? 44 : 0)
+                .padding(.trailing, index == 0 ? firstLinePadding(hasRight: !right.isEmpty) : 0)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func firstLinePadding(hasRight: Bool) -> CGFloat {
+        if hideFirstLineTrailing { return hasRight ? 0 : 44 }
+        return firstLineReserve
     }
 
     @ViewBuilder
