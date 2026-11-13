@@ -89,7 +89,7 @@ struct PopoverView: View {
         MenuRow(id: "github", icon: "arrow.up.right.square", title: "Open Pull Requests on GitHub", action: openGitHub)
         MenuSeparator()
         MenuRow(id: "settings", icon: "gearshape", title: "Settings…", shortcut: "⌘,", action: showSettings)
-        MenuRow(id: "quit", icon: "power", title: "Quit PR Status", shortcut: "⌘Q") { NSApp.terminate(nil) }
+        MenuRow(id: "quit", icon: "power", title: "Quit GitHub Radar", shortcut: "⌘Q") { NSApp.terminate(nil) }
     }
 
     private var updatedText: String? {

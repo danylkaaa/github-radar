@@ -1,4 +1,4 @@
-# PR Status
+# GitHub Radar
 
 Your GitHub pull requests in the macOS menu bar: what waits for your review, how your own PRs are doing, and what is ready to merge.
 
@@ -33,15 +33,15 @@ All screenshots use made-up demo data (`--demo`).
 
 Needs macOS 14 or later on Apple silicon.
 
-1. Download `PRStatus-macos-arm64.zip` from the [latest release](https://github.com/danylkaaa/pr-status/releases/latest).
-2. Unzip it and move `PRStatus.app` to `/Applications`.
+1. Download `GitHubRadar-macos-arm64.zip` from the [latest release](https://github.com/danylkaaa/github-radar/releases/latest).
+2. Unzip it and move `GitHub Radar.app` to `/Applications`.
 3. The app is not notarized by Apple, so remove the download mark once:
 
    ```sh
-   xattr -dr com.apple.quarantine /Applications/PRStatus.app
+   xattr -dr com.apple.quarantine "/Applications/GitHub Radar.app"
    ```
 
-4. Open PR Status. The icon appears in the menu bar.
+4. Open GitHub Radar. The icon appears in the menu bar.
 
 **GitHub access:** the app uses the token of the [GitHub CLI](https://cli.github.com) (`gh auth login`). Without `gh`, paste a token with the `repo` scope in Settings → General → GitHub; it is stored in the macOS Keychain. The app talks only to `api.github.com`.
 
@@ -55,11 +55,11 @@ Needs Xcode 16 or the Command Line Tools, and [Task](https://taskfile.dev).
 task app:run       # build and start from app/.build
 task app:install   # build, copy to ~/Applications and start
 task app:demo      # start with made-up data
-task app:zip       # build dist/PRStatus-macos-arm64.zip
+task app:zip       # build dist/GitHubRadar-macos-arm64.zip
 ```
 
 ## Layout
 
 - `app/Sources/PRCore`: GitHub queries, the PR model, "new activity" and ready-to-merge rules, card layout, insights math.
-- `app/Sources/PRStatus`: the app: menu bar item, dropdown, settings, insights window.
+- `app/Sources/GitHubRadar`: the app: menu bar item, dropdown, settings, insights window.
 - `Taskfile.yml`: build tasks. With only the Command Line Tools they build against the macOS 26.5 SDK, because the macOS 27 SDK needs Xcode for SwiftUI macros.

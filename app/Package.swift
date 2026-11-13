@@ -2,11 +2,11 @@
 import PackageDescription
 
 let package = Package(
-    name: "PRStatus",
+    name: "GitHubRadar",
     platforms: [.macOS(.v14)],
     targets: [
         .target(name: "PRCore"),
-        .executableTarget(name: "PRStatus", dependencies: ["PRCore"]),
+        .executableTarget(name: "GitHubRadar", dependencies: ["PRCore"]),
     ],
     swiftLanguageModes: [.v5]
 )

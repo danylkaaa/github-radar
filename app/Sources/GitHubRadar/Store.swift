@@ -4,7 +4,7 @@ import Observation
 import os
 import PRCore
 
-private let log = Logger(subsystem: "PRStatus", category: "refresh")
+private let log = Logger(subsystem: "GitHubRadar", category: "refresh")
 
 private enum Key {
     static let layout = "layout.v1"
@@ -67,7 +67,18 @@ final class Store {
     /// `--demo`: made-up PRs, activity and insights, default layout and settings, nothing saved. For screenshots.
     @ObservationIgnored let demo = CommandLine.arguments.contains("--demo")
 
+    /// Settings of the app before its rename (PR Status) move over once, so the layout and aliases stay.
+    private static func migrateFromOldName() {
+        let defaults = UserDefaults.standard
+        guard defaults.data(forKey: Key.settings) == nil, defaults.data(forKey: Key.layout) == nil,
+              let old = UserDefaults(suiteName: "local.prstatus.app") else { return }
+        for key in [Key.layout, Key.settings, Key.seen] {
+            if let data = old.data(forKey: key) { defaults.set(data, forKey: key) }
+        }
+    }
+
     init() {
+        if !CommandLine.arguments.contains("--demo") { Self.migrateFromOldName() }
         let demo = CommandLine.arguments.contains("--demo")
         layout = demo ? Self.demoLayout : (Self.load(CardLayout.self, Key.layout) ?? .default).normalized()
         settings = demo ? AppSettings() : Self.load(AppSettings.self, Key.settings) ?? AppSettings()
@@ -133,7 +144,7 @@ final class Store {
 
     /// Explains the menu bar numbers on hover.
     var tooltip: String {
-        guard let snapshot = shownSnapshot else { return error ?? "PR Status" }
+        guard let snapshot = shownSnapshot else { return error ?? "GitHub Radar" }
         var lines = [
             "\(snapshot.review.count) waiting for your review",
             "\(snapshot.mine.count) of yours open, \(snapshot.ready.count) ready to merge",

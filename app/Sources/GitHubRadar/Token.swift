@@ -4,6 +4,7 @@ import Security
 
 /// GitHub token: the Keychain entry set in Settings, else the token of the GitHub CLI.
 enum Token {
+    // the name before the rename to GitHub Radar: kept, so a saved token stays found
     private static let service = "PRStatus"
     private static let account = "github-token"
     private static let ghPaths = ["/opt/homebrew/bin/gh", "/usr/local/bin/gh", "/usr/bin/gh"]

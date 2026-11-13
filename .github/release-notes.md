@@ -1,4 +1,4 @@
-PR Status shows your GitHub pull requests in the macOS menu bar.
+GitHub Radar shows your GitHub pull requests in the macOS menu bar.
 
 ## Features
 
@@ -10,15 +10,15 @@ PR Status shows your GitHub pull requests in the macOS menu bar.
 
 ## Install
 
-1. Download `PRStatus-macos-arm64.zip` below.
-2. Unzip it and move `PRStatus.app` to `/Applications`.
+1. Download `GitHubRadar-macos-arm64.zip` below.
+2. Unzip it and move `GitHub Radar.app` to `/Applications`.
 3. The app is not notarized by Apple, so macOS blocks it at first. Remove the download mark once:
 
    ```sh
-   xattr -dr com.apple.quarantine /Applications/PRStatus.app
+   xattr -dr com.apple.quarantine "/Applications/GitHub Radar.app"
    ```
 
-4. Open PR Status. The icon appears in the menu bar.
+4. Open GitHub Radar. The icon appears in the menu bar.
 
 ## Requirements
 
@@ -26,4 +26,4 @@ macOS 14 or later, Apple silicon.
 
 ## Verify the download
 
-Put both files in one folder and run `shasum -a 256 -c PRStatus-macos-arm64.zip.sha256`.
+Put both files in one folder and run `shasum -a 256 -c GitHubRadar-macos-arm64.zip.sha256`.

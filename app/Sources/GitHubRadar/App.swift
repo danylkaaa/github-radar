@@ -11,7 +11,7 @@ final class SettingsWindow: NSObject, NSWindowDelegate {
     func show(_ store: Store) {
         if window == nil {
             let window = NSWindow(contentViewController: NSHostingController(rootView: SettingsView().environment(store)))
-            window.title = "PR Status Settings"
+            window.title = "GitHub Radar Settings"
             window.styleMask = [.titled, .closable, .miniaturizable]
             window.isReleasedWhenClosed = false
             window.delegate = self
@@ -116,7 +116,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     VStack(alignment: .leading) { ForEach(all.filter { !$0.conversation.isEmpty }) { CommentsList(pr: $0) } }
                 }
                 let window = NSWindow(contentViewController: NSHostingController(rootView: view))
-                window.title = "PR Status details"
+                window.title = "GitHub Radar details"
                 window.makeKeyAndOrderFront(nil)
                 self.debugWindows.append(window)
             }

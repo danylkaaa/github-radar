@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PR Status</title>
-<meta name="description" content="PR Status shows your GitHub pull requests in the macOS menu bar: what waits for your review, how your PRs are doing, and what is ready to merge. Free and open source.">
+<title>GitHub Radar</title>
+<meta name="description" content="GitHub Radar shows your GitHub pull requests in the macOS menu bar: what waits for your review, how your PRs are doing, and what is ready to merge. Free and open source.">
 <meta name="color-scheme" content="light dark">
 <meta property="og:type" content="website">
-<meta property="og:title" content="PR Status">
+<meta property="og:title" content="GitHub Radar">
 <meta property="og:description" content="Your GitHub pull requests in the macOS menu bar.">
-<meta property="og:url" content="https://danylkaaa.github.io/pr-status/">
-<meta property="og:image" content="https://danylkaaa.github.io/pr-status/screenshots/dropdown.png">
+<meta property="og:url" content="https://danylkaaa.github.io/github-radar/">
+<meta property="og:image" content="https://danylkaaa.github.io/github-radar/screenshots/dropdown.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232563eb'/%3E%3Ccircle cx='20' cy='18' r='5' fill='none' stroke='white' stroke-width='4'/%3E%3Ccircle cx='20' cy='46' r='5' fill='none' stroke='white' stroke-width='4'/%3E%3Cpath d='M20 23v18M44 46V28a8 8 0 0 0-8-8h-5' fill='none' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3Ccircle cx='44' cy='46' r='5' fill='none' stroke='white' stroke-width='4'/%3E%3C/svg%3E">
 <style>
@@ -122,11 +122,11 @@ footer p{margin:6px 0}
         <span>Fri 10:41</span>
       </div>
     </div>
-    <h1>PR Status</h1>
+    <h1>GitHub Radar</h1>
     <p class="pitch">Your GitHub pull requests in the macOS menu bar</p>
     <div class="btns">
-      <a class="btn primary" href="https://github.com/danylkaaa/pr-status/releases/latest/download/PRStatus-macos-arm64.zip">Download for macOS (Apple silicon)</a>
-      <a class="btn secondary" href="https://github.com/danylkaaa/pr-status">View on GitHub</a>
+      <a class="btn primary" href="https://github.com/danylkaaa/github-radar/releases/latest/download/GitHubRadar-macos-arm64.zip">Download for macOS (Apple silicon)</a>
+      <a class="btn secondary" href="https://github.com/danylkaaa/github-radar">View on GitHub</a>
     </div>
     <p class="fine">macOS 14+ &middot; Apple silicon &middot; free and open source (MIT)</p>
   </div>
@@ -136,7 +136,7 @@ footer p{margin:6px 0}
   <div class="wrap center">
     <picture>
       <source srcset="screenshots/dropdown-dark.png" media="(prefers-color-scheme: dark)">
-      <img class="shot" src="screenshots/dropdown.png" alt="The PR Status dropdown with review requests, your pull requests and ready to merge" width="420" height="655" style="width:min(420px,100%);height:auto">
+      <img class="shot" src="screenshots/dropdown.png" alt="The GitHub Radar dropdown with review requests, your pull requests and ready to merge" width="420" height="655" style="width:min(420px,100%);height:auto">
     </picture>
   </div>
 </section>
@@ -215,12 +215,12 @@ footer p{margin:6px 0}
     <h2>Install</h2>
     <p class="lead">Needs macOS 14 or later on Apple silicon.</p>
     <ol class="steps">
-      <li><strong>Download</strong><span class="muted"><a href="https://github.com/danylkaaa/pr-status/releases/latest/download/PRStatus-macos-arm64.zip">PRStatus-macos-arm64.zip</a> from the <a href="https://github.com/danylkaaa/pr-status/releases/latest">latest release</a>.</span></li>
-      <li><strong>Move it</strong><span class="muted">Unzip it and move <code>PRStatus.app</code> to <code>/Applications</code>.</span></li>
+      <li><strong>Download</strong><span class="muted"><a href="https://github.com/danylkaaa/github-radar/releases/latest/download/GitHubRadar-macos-arm64.zip">GitHubRadar-macos-arm64.zip</a> from the <a href="https://github.com/danylkaaa/github-radar/releases/latest">latest release</a>.</span></li>
+      <li><strong>Move it</strong><span class="muted">Unzip it and move <code>GitHub Radar.app</code> to <code>/Applications</code>.</span></li>
       <li><strong>Remove the download mark</strong>
         <span class="muted">The app is not notarized by Apple, so macOS blocks it at first. Run this once in Terminal to allow it:</span>
-        <pre>xattr -dr com.apple.quarantine /Applications/PRStatus.app</pre></li>
-      <li><strong>Open PR Status</strong><span class="muted">The icon appears in the menu bar. To start it with your Mac, turn on Settings &rarr; General &rarr; Launch at login.</span></li>
+        <pre>xattr -dr com.apple.quarantine "/Applications/GitHub Radar.app"</pre></li>
+      <li><strong>Open GitHub Radar</strong><span class="muted">The icon appears in the menu bar. To start it with your Mac, turn on Settings &rarr; General &rarr; Launch at login.</span></li>
     </ol>
     <div class="note">
       <p><strong>GitHub access.</strong> <span class="muted">The app uses the token of the <a href="https://cli.github.com">GitHub CLI</a> (<code>gh auth login</code>). Without <code>gh</code>, paste a token with the <code>repo</code> scope in Settings &rarr; General &rarr; GitHub. It is stored in the macOS Keychain. The app talks only to <code>api.github.com</code>.</span></p>
@@ -236,14 +236,14 @@ footer p{margin:6px 0}
 <pre>task app:run       <span class="c"># build and start from app/.build</span>
 task app:install   <span class="c"># build, copy to ~/Applications and start</span>
 task app:demo      <span class="c"># start with made-up data</span>
-task app:zip       <span class="c"># build dist/PRStatus-macos-arm64.zip</span></pre>
+task app:zip       <span class="c"># build dist/GitHubRadar-macos-arm64.zip</span></pre>
     </div>
   </div>
 </section>
 
 <footer>
   <div class="wrap">
-    <p>MIT license &middot; <a href="https://github.com/danylkaaa/pr-status">github.com/danylkaaa/pr-status</a></p>
+    <p>MIT license &middot; <a href="https://github.com/danylkaaa/github-radar">github.com/danylkaaa/github-radar</a></p>
     <p>Screenshots use made-up demo data.</p>
   </div>
 </footer>

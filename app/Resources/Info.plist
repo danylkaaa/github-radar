@@ -3,13 +3,13 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleName</key>
-	<string>PR Status</string>
+	<string>GitHub Radar</string>
 	<key>CFBundleDisplayName</key>
-	<string>PR Status</string>
+	<string>GitHub Radar</string>
 	<key>CFBundleIdentifier</key>
-	<string>local.prstatus.app</string>
+	<string>io.github.danylkaaa.githubradar</string>
 	<key>CFBundleExecutable</key>
-	<string>PRStatus</string>
+	<string>GitHubRadar</string>
 	<key>CFBundleIconFile</key>
 	<string>AppIcon</string>
 	<key>CFBundlePackageType</key>

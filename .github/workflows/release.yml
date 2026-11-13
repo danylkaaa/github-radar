@@ -34,12 +34,12 @@ jobs:
         run: task app:zip
       - name: Write the checksum
         working-directory: dist
-        run: shasum -a 256 PRStatus-macos-arm64.zip > PRStatus-macos-arm64.zip.sha256
+        run: shasum -a 256 GitHubRadar-macos-arm64.zip > GitHubRadar-macos-arm64.zip.sha256
       - name: Publish the release
         run: |
-          FILES=(dist/PRStatus-macos-arm64.zip dist/PRStatus-macos-arm64.zip.sha256)
+          FILES=(dist/GitHubRadar-macos-arm64.zip dist/GitHubRadar-macos-arm64.zip.sha256)
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" "${FILES[@]}" --clobber
           else
-            gh release create "$TAG" "${FILES[@]}" --title "PR Status $TAG" --notes-file .github/release-notes.md
+            gh release create "$TAG" "${FILES[@]}" --title "GitHub Radar $TAG" --notes-file .github/release-notes.md
           fi

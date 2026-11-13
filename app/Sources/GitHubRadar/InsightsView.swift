@@ -13,7 +13,7 @@ final class InsightsWindow: NSObject, NSWindowDelegate {
         closeDropdown()
         if window == nil {
             let window = NSWindow(contentViewController: NSHostingController(rootView: InsightsView().environment(store)))
-            window.title = "PR Status Insights"
+            window.title = "GitHub Radar Insights"
             window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
             window.isReleasedWhenClosed = false
             window.delegate = self

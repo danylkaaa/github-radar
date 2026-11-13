@@ -5,51 +5,53 @@ vars:
   # With Xcode (CI runners), use its default SDK.
   SDK:
     sh: xcode-select -p | grep -q CommandLineTools && test -d /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk && echo /Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk || true
-  BUNDLE: .build/PRStatus.app
-  ZIP: ../dist/PRStatus-macos-arm64.zip
+  BUNDLE: ".build/GitHub Radar.app"
+  ZIP: ../dist/GitHubRadar-macos-arm64.zip
 
 tasks:
   app:build:
-    desc: Build PRStatus.app into app/.build
+    desc: Build GitHub Radar.app into app/.build
     dir: app
     cmds:
       - '{{if .SDK}}SDKROOT={{.SDK}} {{end}}swift build -c release --quiet 2>&1 | grep -v "ld: warning: search path" || true'
-      - test -x .build/release/PRStatus
-      - rm -rf {{.BUNDLE}} && mkdir -p {{.BUNDLE}}/Contents/MacOS {{.BUNDLE}}/Contents/Resources
-      - cp .build/release/PRStatus {{.BUNDLE}}/Contents/MacOS/
-      - cp Resources/Info.plist {{.BUNDLE}}/Contents/
-      - cp Resources/AppIcon.icns Resources/MenuBarIcon.png {{.BUNDLE}}/Contents/Resources/
-      - codesign --force --sign - {{.BUNDLE}} 2>/dev/null
+      - test -x .build/release/GitHubRadar
+      - rm -rf "{{.BUNDLE}}" && mkdir -p "{{.BUNDLE}}/Contents/MacOS" "{{.BUNDLE}}/Contents/Resources"
+      - cp .build/release/GitHubRadar "{{.BUNDLE}}/Contents/MacOS/"
+      - cp Resources/Info.plist "{{.BUNDLE}}/Contents/"
+      - cp Resources/AppIcon.icns Resources/MenuBarIcon.png "{{.BUNDLE}}/Contents/Resources/"
+      - codesign --force --sign - "{{.BUNDLE}}" 2>/dev/null
 
   app:run:
     desc: Build and start the app from app/.build
     deps: [app:build]
     dir: app
     cmds:
-      - pkill -x PRStatus || true
-      - open {{.BUNDLE}} {{if .CLI_ARGS}}--args {{.CLI_ARGS}}{{end}}
+      - pkill -x GitHubRadar || true
+      - open "{{.BUNDLE}}" {{if .CLI_ARGS}}--args {{.CLI_ARGS}}{{end}}
 
   app:install:
     desc: Build and install the app to ~/Applications
     deps: [app:build]
     dir: app
     cmds:
+      - pkill -x GitHubRadar || true
+      # the app was called PR Status before
       - pkill -x PRStatus || true
-      - rm -rf ~/Applications/PRStatus.app && cp -R {{.BUNDLE}} ~/Applications/
-      - open ~/Applications/PRStatus.app
+      - rm -rf ~/Applications/PRStatus.app "$HOME/Applications/GitHub Radar.app" && cp -R "{{.BUNDLE}}" ~/Applications/
+      - open "$HOME/Applications/GitHub Radar.app"
 
   app:zip:
-    desc: Build and pack the app as dist/PRStatus-macos-arm64.zip
+    desc: Build and pack the app as dist/GitHubRadar-macos-arm64.zip
     deps: [app:build]
     dir: app
     cmds:
       - mkdir -p ../dist && rm -f {{.ZIP}}
-      - ditto -c -k --keepParent {{.BUNDLE}} {{.ZIP}}
+      - ditto -c -k --keepParent "{{.BUNDLE}}" {{.ZIP}}
 
   app:demo:
     desc: Start the app with made-up data (for screenshots)
     deps: [app:build]
     dir: app
     cmds:
-      - pkill -x PRStatus || true
-      - open {{.BUNDLE}} --args --demo {{.CLI_ARGS}}
+      - pkill -x GitHubRadar || true
+      - open "{{.BUNDLE}}" --args --demo {{.CLI_ARGS}}
