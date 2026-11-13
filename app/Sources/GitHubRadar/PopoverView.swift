@@ -39,11 +39,14 @@ struct PopoverView: View {
         .onDisappear { store.selection = nil }
     }
 
-    private var visible: [(title: String, prs: [PullRequest])] {
+    private var visible: [(title: String, icon: String, prs: [PullRequest])] {
         guard let sections = store.sections else { return [] }
-        return [("Review Requested", sections.review), ("My Pull Requests", sections.mine), ("Ready to Merge", sections.ready)]
-            .filter { !$0.1.isEmpty }
-            .map { (title: $0.0, prs: $0.1) }
+        let all = [
+            (title: "Review Requested", icon: "eye", prs: sections.review),
+            (title: "My Pull Requests", icon: "arrow.triangle.pull", prs: sections.mine),
+            (title: "Ready to Merge", icon: "arrow.triangle.merge", prs: sections.ready),
+        ]
+        return all.filter { !$0.prs.isEmpty }
     }
 
     @ViewBuilder
@@ -58,7 +61,7 @@ struct PopoverView: View {
             if store.sections != nil {
                 ForEach(Array(visible.enumerated()), id: \.offset) { index, section in
                     if index > 0 { MenuSeparator() }
-                    SectionView(title: section.title, prs: section.prs)
+                    SectionView(title: section.title, icon: section.icon, prs: section.prs)
                 }
                 if visible.isEmpty {
                     MenuHeader(text: "No open pull requests")
@@ -382,6 +385,7 @@ private struct SectionView: View {
     @Environment(Store.self) private var store
     @State private var hovered = false
     let title: String
+    let icon: String
     let prs: [PullRequest]
 
     private var collapsed: Bool { store.settings.collapsedSections.contains(title) }
@@ -389,6 +393,7 @@ private struct SectionView: View {
 
     var body: some View {
         HStack(spacing: 4) {
+            Image(systemName: icon).frame(width: 16)
             Text("\(title) (\(prs.count))")
             if collapsed, prs.contains(where: \.isNew) {
                 Circle().fill(Color.accentColor).frame(width: 6, height: 6)
