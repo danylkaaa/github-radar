@@ -1,0 +1,45 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing tag to release, for example v0.1.0
+        required: true
+
+jobs:
+  release:
+    runs-on: macos-15
+    permissions:
+      contents: write
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - uses: arduino/setup-task@v2
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set the version from the tag
+        run: |
+          VERSION="${TAG#v}"
+          PLIST=app/Resources/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $VERSION" "$PLIST"
+      - name: Build and pack the app
+        run: task app:zip
+      - name: Write the checksum
+        working-directory: dist
+        run: shasum -a 256 PRStatus-macos-arm64.zip > PRStatus-macos-arm64.zip.sha256
+      - name: Publish the release
+        run: |
+          FILES=(dist/PRStatus-macos-arm64.zip dist/PRStatus-macos-arm64.zip.sha256)
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "${FILES[@]}" --clobber
+          else
+            gh release create "$TAG" "${FILES[@]}" --title "PR Status $TAG" --notes-file .github/release-notes.md
+          fi

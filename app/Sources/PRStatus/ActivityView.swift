@@ -32,46 +32,8 @@ struct ActivityRow: View {
     private var hovered: Bool { store.selection == "row:activity" }
 
     var body: some View {
-        let week = Array(store.calendar.suffix(7))
         VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 8) {
-                Text("Activity").font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(Color.primary.opacity(0.7))
-                HStack(spacing: 3) {
-                    ForEach(week) { day in
-                        RoundedRectangle(cornerRadius: 3)
-                            .fill(activityColor(day.level, dark: scheme == .dark))
-                            .frame(width: 13, height: 13)
-                            .help("\(dayLabel.string(from: day.date)): \(day.count) contribution\(day.count == 1 ? "" : "s")")
-                    }
-                }
-                Text(verbatim: "\(week.map(\.count).reduce(0, +)) this week")
-                    .font(.system(size: 12)).foregroundStyle(Color.primary.opacity(0.85))
-                Spacer()
-                Button {
-                    InsightsWindow.shared.show(store)
-                } label: {
-                    Image(systemName: "chart.bar.xaxis").font(.system(size: 12))
-                }
-                .buttonStyle(.plain)
-                .foregroundStyle(Color.primary.opacity(0.65))
-                .help("Insights")
-                .pointingHand()
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 11, weight: .semibold))
-                    .rotationEffect(.degrees(expanded ? 90 : 0))
-                    .foregroundStyle(Color.primary.opacity(hovered ? 0.85 : 0.45))
-            }
-            .contentShape(Rectangle())
-            .onHover { store.hover("row:activity", $0) }
-            .pointingHand()
-            .onTapGesture { store.activityExpanded.toggle() }
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel("Activity: \(week.map(\.count).reduce(0, +)) contributions in the last 7 days")
-            .accessibilityHint(expanded ? "Hides the calendar" : "Shows the calendar")
-            .accessibilityAddTraits(.isButton)
-            .accessibilityAction(.default) { store.activityExpanded.toggle() }
-            .accessibilityAction(named: "Insights") { InsightsWindow.shared.show(store) }
+            ActivityHeader(week: Array(store.calendar.suffix(7)))
             if expanded {
                 ContributionCalendar()
             }
@@ -82,6 +44,70 @@ struct ActivityRow: View {
         .opacity(store.calendar.isEmpty ? 0 : 1)
         .frame(height: store.calendar.isEmpty ? 0 : nil)
     }
+}
+
+/// "Activity", the week's squares and total, the Insights icon and the chevron.
+private struct ActivityHeader: View {
+    @Environment(Store.self) private var store
+    @Environment(\.colorScheme) private var scheme
+    let week: [ContributionDay]
+
+    private var total: Int { week.map(\.count).reduce(0, +) }
+    private var expanded: Bool { store.activityExpanded }
+    private var hovered: Bool { store.selection == "row:activity" }
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Text("Activity").font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(Color.primary.opacity(0.7))
+            squares
+            Text(verbatim: "\(total) this week")
+                .font(.system(size: 12)).foregroundStyle(Color.primary.opacity(0.85))
+            Spacer()
+            insightsButton
+            Image(systemName: "chevron.right")
+                .font(.system(size: 11, weight: .semibold))
+                .rotationEffect(.degrees(expanded ? 90 : 0))
+                .foregroundStyle(Color.primary.opacity(hovered ? 0.85 : 0.45))
+        }
+        .contentShape(Rectangle())
+        .onHover { store.hover("row:activity", $0) }
+        .pointingHand()
+        .onTapGesture { store.activityExpanded.toggle() }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Activity: \(total) contributions in the last 7 days")
+        .accessibilityHint(expanded ? "Hides the calendar" : "Shows the calendar")
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction(.default) { store.activityExpanded.toggle() }
+        .accessibilityAction(named: "Insights") { InsightsWindow.shared.show(store) }
+    }
+
+    private var squares: some View {
+        HStack(spacing: 3) {
+            ForEach(week) { day in
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(activityColor(day.level, dark: scheme == .dark))
+                    .frame(width: 13, height: 13)
+                    .help(dayHelp(day))
+            }
+        }
+    }
+
+    private var insightsButton: some View {
+        Button {
+            InsightsWindow.shared.show(store)
+        } label: {
+            Image(systemName: "chart.bar.xaxis").font(.system(size: 12))
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(Color.primary.opacity(0.65))
+        .help("Insights")
+        .pointingHand()
+    }
+}
+
+func dayHelp(_ day: ContributionDay) -> String {
+    "\(dayLabel.string(from: day.date)): \(day.count) contribution\(day.count == 1 ? "" : "s")"
 }
 
 /// The contribution calendar as week columns; scrolling to the left edge loads the year before.

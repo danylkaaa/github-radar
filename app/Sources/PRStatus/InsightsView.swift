@@ -34,9 +34,6 @@ final class InsightsWindow: NSObject, NSWindowDelegate {
 struct InsightsView: View {
     @Environment(Store.self) private var store
     @State private var period: InsightsPeriod = .month
-    @State private var hoverHour: Int?
-    @State private var hoverDay: String?
-    @State private var hoverRepo: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -77,11 +74,31 @@ struct InsightsView: View {
         .onChange(of: period) { _, new in Task { await store.loadInsights(new) } }
     }
 
-    @ViewBuilder
+    // split into small views: one large body is too slow to type-check for older Swift compilers
     private func content(_ insights: Insights) -> some View {
         let dates = insights.commits.map(\.date)
+        return VStack(alignment: .leading, spacing: 16) {
+            Totals(insights: insights)
+            HStack(alignment: .top, spacing: 12) {
+                Panel(title: "When you commit, by hour") { HourChart(hours: hourHistogram(dates)) }
+                Panel(title: "By weekday") { WeekdayChart(days: weekdayHistogram(dates)) }
+                    .frame(width: 260)
+            }
+            Panel(title: "Worked on most (commits)") { ReposChart(repos: topRepos(insights.commits), total: insights.commits.count) }
+            HStack(alignment: .top, spacing: 12) {
+                Panel(title: "Time to merge by org") { MergeTable(rows: mergeStats(insights.merged, by: \.org)) }
+                Panel(title: "Time to merge by repo") { MergeTable(rows: mergeStats(insights.merged, by: \.repo)) }
+            }
+        }
+    }
+}
+
+private struct Totals: View {
+    let insights: Insights
+
+    var body: some View {
         let overall = mergeStats(insights.merged)
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 12) {
                 StatTile(title: "Commits", value: "\(insights.commits.count)\(insights.commitsCapped ? "+" : "")")
                 StatTile(title: "PRs merged", value: "\(insights.merged.count)")
@@ -92,99 +109,114 @@ struct InsightsView: View {
                 Text("GitHub's commit search returns at most 1000 commits; the charts use the latest 1000 of this period.")
                     .font(.caption).foregroundStyle(Color.primary.opacity(0.75))
             }
-            HStack(alignment: .top, spacing: 12) {
-                Panel(title: "When you commit, by hour") {
-                    let hours = hourHistogram(dates)
-                    Chart {
-                        ForEach(Array(hours.enumerated()), id: \.offset) { hour, count in
-                            BarMark(x: .value("Hour", hour), y: .value("Commits", count))
-                                .foregroundStyle(hoverHour == nil || hoverHour == hour ? Color.accentColor : Color.accentColor.opacity(0.35))
-                        }
-                        if let hour = hoverHour, hours.indices.contains(hour) {
-                            RuleMark(x: .value("Hour", hour))
-                                .foregroundStyle(Color.primary.opacity(0.25))
-                                .annotation(position: .top, overflowResolution: .init(x: .fit, y: .disabled)) {
-                                    ChartPopup(title: String(format: "%02d:00–%02d:59", hour, hour), value: "\(hours[hour]) commits")
-                                }
-                        }
-                    }
-                    .chartXSelection(value: $hoverHour)
-                    .chartXScale(domain: -0.5...23.5)
-                    .chartXAxis { AxisMarks(values: [0, 6, 12, 18]) { _ in
-                        AxisGridLine().foregroundStyle(Color.primary.opacity(0.18))
-                        AxisTick().foregroundStyle(Color.primary.opacity(0.3))
-                        AxisValueLabel().foregroundStyle(Color.primary.opacity(0.85)).font(.system(size: 11))
-                    } }
-                    .chartYAxis { AxisMarks { _ in
-                        AxisGridLine().foregroundStyle(Color.primary.opacity(0.18))
-                        AxisTick().foregroundStyle(Color.primary.opacity(0.3))
-                        AxisValueLabel().foregroundStyle(Color.primary.opacity(0.85)).font(.system(size: 11))
-                    } }
-                    .frame(height: 150)
-                }
-                Panel(title: "By weekday") {
-                    let names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-                    let days = weekdayHistogram(dates)
-                    Chart {
-                        ForEach(Array(days.enumerated()), id: \.offset) { day, count in
-                            BarMark(x: .value("Day", names[day]), y: .value("Commits", count))
-                                .foregroundStyle(hoverDay == nil || hoverDay == names[day] ? Color.green : Color.green.opacity(0.35))
-                        }
-                        if let day = hoverDay, let index = names.firstIndex(of: day) {
-                            RuleMark(x: .value("Day", day))
-                                .foregroundStyle(Color.primary.opacity(0.25))
-                                .annotation(position: .top, overflowResolution: .init(x: .fit, y: .disabled)) {
-                                    ChartPopup(title: day, value: "\(days[index]) commits")
-                                }
-                        }
-                    }
-                    .chartXSelection(value: $hoverDay)
-                    .chartXAxis { AxisMarks { _ in
-                        AxisGridLine().foregroundStyle(Color.primary.opacity(0.18))
-                        AxisTick().foregroundStyle(Color.primary.opacity(0.3))
-                        AxisValueLabel().foregroundStyle(Color.primary.opacity(0.85)).font(.system(size: 11))
-                    } }
-                    .chartYAxis { AxisMarks { _ in
-                        AxisGridLine().foregroundStyle(Color.primary.opacity(0.18))
-                        AxisTick().foregroundStyle(Color.primary.opacity(0.3))
-                        AxisValueLabel().foregroundStyle(Color.primary.opacity(0.85)).font(.system(size: 11))
-                    } }
-                    .frame(height: 150)
-                }
-                .frame(width: 260)
+        }
+    }
+}
+
+private struct HourChart: View {
+    let hours: [Int]
+    @State private var hover: Int?
+
+    var body: some View {
+        Chart {
+            ForEach(Array(hours.enumerated()), id: \.offset) { hour, count in
+                BarMark(x: .value("Hour", hour), y: .value("Commits", count))
+                    .foregroundStyle(color(hour))
             }
-            Panel(title: "Worked on most (commits)") {
-                let repos = topRepos(insights.commits)
-                if repos.isEmpty {
-                    Text("No commits in this period").foregroundStyle(Color.primary.opacity(0.75))
-                } else {
-                    Chart(repos, id: \.repo) { item in
-                        BarMark(x: .value("Commits", item.commits), y: .value("Repo", item.repo))
-                            .foregroundStyle(hoverRepo == nil || hoverRepo == item.repo ? Color.orange : Color.orange.opacity(0.35))
-                            .annotation(position: .trailing) {
-                                Text("\(item.commits)\(hoverRepo == item.repo ? " commits · \(Int((Double(item.commits) / Double(max(1, insights.commits.count)) * 100).rounded()))%" : "")")
-                                    .font(.system(size: 11, weight: .medium)).foregroundStyle(Color.primary.opacity(0.85))
-                            }
+            if let hour = hover, hours.indices.contains(hour) {
+                RuleMark(x: .value("Hour", hour))
+                    .foregroundStyle(Color.primary.opacity(0.25))
+                    .annotation(position: .top, overflowResolution: .init(x: .fit, y: .disabled)) {
+                        ChartPopup(title: String(format: "%02d:00–%02d:59", hour, hour), value: "\(hours[hour]) commits")
                     }
-                    .chartYSelection(value: $hoverRepo)
-                    .chartXAxis(.hidden)
-                    .chartYAxis {
-                        AxisMarks { _ in
-                            AxisValueLabel().foregroundStyle(Color.primary).font(.system(size: 12))
-                        }
-                    }
-                    .frame(height: CGFloat(repos.count) * 26 + 10)
-                }
-            }
-            HStack(alignment: .top, spacing: 12) {
-                Panel(title: "Time to merge by org") {
-                    MergeTable(rows: mergeStats(insights.merged, by: \.org))
-                }
-                Panel(title: "Time to merge by repo") {
-                    MergeTable(rows: mergeStats(insights.merged, by: \.repo))
-                }
             }
         }
+        .chartXSelection(value: $hover)
+        .chartXScale(domain: -0.5...23.5)
+        .chartXAxis { AxisMarks(values: [0, 6, 12, 18]) { _ in
+            AxisGridLine().foregroundStyle(Color.primary.opacity(0.18))
+            AxisTick().foregroundStyle(Color.primary.opacity(0.3))
+            AxisValueLabel().foregroundStyle(Color.primary.opacity(0.85)).font(.system(size: 11))
+        } }
+        .chartYAxis { AxisMarks { _ in
+            AxisGridLine().foregroundStyle(Color.primary.opacity(0.18))
+            AxisTick().foregroundStyle(Color.primary.opacity(0.3))
+            AxisValueLabel().foregroundStyle(Color.primary.opacity(0.85)).font(.system(size: 11))
+        } }
+        .frame(height: 150)
+    }
+
+    private func color(_ hour: Int) -> Color {
+        hover == nil || hover == hour ? Color.accentColor : Color.accentColor.opacity(0.35)
+    }
+}
+
+private struct WeekdayChart: View {
+    let days: [Int]
+    @State private var hover: String?
+    private let names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+
+    var body: some View {
+        Chart {
+            ForEach(Array(days.enumerated()), id: \.offset) { day, count in
+                BarMark(x: .value("Day", names[day]), y: .value("Commits", count))
+                    .foregroundStyle(color(names[day]))
+            }
+            if let day = hover, let index = names.firstIndex(of: day) {
+                RuleMark(x: .value("Day", day))
+                    .foregroundStyle(Color.primary.opacity(0.25))
+                    .annotation(position: .top, overflowResolution: .init(x: .fit, y: .disabled)) {
+                        ChartPopup(title: day, value: "\(days[index]) commits")
+                    }
+            }
+        }
+        .chartXSelection(value: $hover)
+        .chartXAxis { AxisMarks { _ in
+            AxisGridLine().foregroundStyle(Color.primary.opacity(0.18))
+            AxisTick().foregroundStyle(Color.primary.opacity(0.3))
+            AxisValueLabel().foregroundStyle(Color.primary.opacity(0.85)).font(.system(size: 11))
+        } }
+        .chartYAxis { AxisMarks { _ in
+            AxisGridLine().foregroundStyle(Color.primary.opacity(0.18))
+            AxisTick().foregroundStyle(Color.primary.opacity(0.3))
+            AxisValueLabel().foregroundStyle(Color.primary.opacity(0.85)).font(.system(size: 11))
+        } }
+        .frame(height: 150)
+    }
+
+    private func color(_ day: String) -> Color {
+        hover == nil || hover == day ? Color.green : Color.green.opacity(0.35)
+    }
+}
+
+private struct ReposChart: View {
+    let repos: [(repo: String, commits: Int)]
+    let total: Int
+    @State private var hover: String?
+
+    var body: some View {
+        if repos.isEmpty {
+            Text("No commits in this period").foregroundStyle(Color.primary.opacity(0.75))
+        } else {
+            Chart(repos, id: \.repo) { item in
+                BarMark(x: .value("Commits", item.commits), y: .value("Repo", item.repo))
+                    .foregroundStyle(hover == nil || hover == item.repo ? Color.orange : Color.orange.opacity(0.35))
+                    .annotation(position: .trailing) {
+                        Text(label(item))
+                            .font(.system(size: 11, weight: .medium)).foregroundStyle(Color.primary.opacity(0.85))
+                    }
+            }
+            .chartYSelection(value: $hover)
+            .chartXAxis(.hidden)
+            .chartYAxis { AxisMarks { _ in AxisValueLabel().foregroundStyle(Color.primary).font(.system(size: 12)) } }
+            .frame(height: CGFloat(repos.count) * 26 + 10)
+        }
+    }
+
+    private func label(_ item: (repo: String, commits: Int)) -> String {
+        guard hover == item.repo else { return "\(item.commits)" }
+        let share = Int((Double(item.commits) / Double(max(1, total)) * 100).rounded())
+        return "\(item.commits) commits · \(share)%"
     }
 }
 
