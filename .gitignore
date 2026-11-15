@@ -1,4 +1,5 @@
 .build
+.swiftpm
 .claude/worktrees
 dist
 .DS_Store
