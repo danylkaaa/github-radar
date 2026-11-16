@@ -49,17 +49,21 @@ To start it with your Mac, turn on Settings → General → Launch at login.
 
 ## Build from source
 
-Needs Xcode 16 or the Command Line Tools, and [Task](https://taskfile.dev).
+Needs Xcode 16 or the Command Line Tools. Nothing else to install:
 
 ```sh
-task app:run       # build and start from app/.build
-task app:install   # build, copy to ~/Applications and start
-task app:demo      # start with made-up data
-task app:zip       # build dist/GitHubRadar-macos-arm64.zip
+./radar build        # build app/.build/GitHub Radar.app
+./radar run          # build and start from app/.build
+./radar demo         # start with made-up data
+./radar install      # build, copy to ~/Applications and start
+./radar distribute   # build dist/GitHubRadar-macos-arm64.zip
+./radar open         # open the package in Xcode
 ```
+
+If you have [Task](https://taskfile.dev), the same steps are in `Taskfile.yml` (`task app:run` and so on).
 
 ## Layout
 
 - `app/Sources/PRCore`: GitHub queries, the PR model, "new activity" and ready-to-merge rules, card layout, insights math.
 - `app/Sources/GitHubRadar`: the app: menu bar item, dropdown, settings, insights window.
-- `Taskfile.yml`: build tasks. With only the Command Line Tools they build against the macOS 26.5 SDK, because the macOS 27 SDK needs Xcode for SwiftUI macros.
+- `radar` (and `Taskfile.yml` for [Task](https://taskfile.dev)): build tasks. With only the Command Line Tools they build against the macOS 26.5 SDK, because the macOS 27 SDK needs Xcode for SwiftUI macros.

@@ -1,0 +1,91 @@
+#!/bin/sh
+# Build, run and pack GitHub Radar. Run ./radar help for the commands.
+set -eu
+cd "$(dirname "$0")"
+
+BUNDLE="app/.build/GitHub Radar.app"
+ZIP=dist/GitHubRadar-macos-arm64.zip
+
+usage() {
+  cat <<USAGE
+Usage: ./radar <command> [args]
+
+Commands:
+  build              build $BUNDLE
+  run [args]         build and start the app; args go to the app, e.g. ./radar run --demo
+  demo               build and start the app with made-up data
+  install            build, copy to ~/Applications and start
+  distribute         build $ZIP
+  open               open the package in Xcode
+  help               show this help
+USAGE
+}
+
+build() {
+  # With only the Command Line Tools, the macOS 27 SDK lacks the SwiftUI macro plugins: build against 26.5 then.
+  # With Xcode, use its default SDK.
+  clt_sdk=/Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk
+  if xcode-select -p | grep -q CommandLineTools && [ -d "$clt_sdk" ]; then
+    export SDKROOT="$clt_sdk"
+  fi
+
+  (cd app && swift build -c release --quiet 2>&1 | grep -v "ld: warning: search path" || true)
+  test -x app/.build/release/GitHubRadar
+
+  rm -rf "$BUNDLE"
+  mkdir -p "$BUNDLE/Contents/MacOS" "$BUNDLE/Contents/Resources"
+  cp app/.build/release/GitHubRadar "$BUNDLE/Contents/MacOS/"
+  cp app/Resources/Info.plist "$BUNDLE/Contents/"
+  cp app/Resources/AppIcon.icns app/Resources/MenuBarIcon.png "$BUNDLE/Contents/Resources/"
+  codesign --force --sign - "$BUNDLE" 2>/dev/null
+  echo "Built $BUNDLE"
+}
+
+run() {
+  build
+  pkill -x GitHubRadar || true
+  if [ $# -gt 0 ]; then
+    open "$BUNDLE" --args "$@"
+  else
+    open "$BUNDLE"
+  fi
+}
+
+install() {
+  build
+  pkill -x GitHubRadar || true
+  # the app was called PR Status before
+  pkill -x PRStatus || true
+  mkdir -p "$HOME/Applications"
+  rm -rf "$HOME/Applications/PRStatus.app" "$HOME/Applications/GitHub Radar.app"
+  cp -R "$BUNDLE" "$HOME/Applications/"
+  open "$HOME/Applications/GitHub Radar.app"
+}
+
+distribute() {
+  build
+  mkdir -p dist && rm -f "$ZIP"
+  ditto -c -k --keepParent "$BUNDLE" "$ZIP"
+  echo "Packed $ZIP"
+}
+
+open_xcode() {
+  if ! open -Ra Xcode 2>/dev/null; then
+    echo "Xcode is not installed. Get it from the App Store, or use ./radar build and ./radar run." >&2
+    exit 1
+  fi
+  open -a Xcode app/Package.swift
+}
+
+command=${1:-help}
+[ $# -gt 0 ] && shift
+case "$command" in
+  build) build ;;
+  run) run "$@" ;;
+  demo) run --demo "$@" ;;
+  install) install ;;
+  distribute) distribute ;;
+  open) open_xcode ;;
+  help | -h | --help) usage ;;
+  *) echo "Unknown command: $command" >&2; usage >&2; exit 1 ;;
+esac
